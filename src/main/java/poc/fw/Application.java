@@ -1,11 +1,11 @@
-package poc;
+package poc.fw;
 
 import io.camunda.zeebe.spring.client.EnableZeebeClient;
 import io.camunda.zeebe.spring.client.annotation.Deployment;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "poc")
 @EnableZeebeClient
 @Deployment(resources = "classpath:bpmn/poc-process.bpmn")
 public class Application {
