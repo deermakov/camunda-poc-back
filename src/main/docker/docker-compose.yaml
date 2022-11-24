@@ -1,0 +1,14 @@
+version: '3.8'
+
+networks:
+  default:
+    name: poc_network
+    external: true
+
+services:
+  camunda-poc-back:
+    image: doxus.bpm.lanit/duedil/${project.artifactId}:${project.version}
+    environment:
+    - "SPRING_PROFILES_ACTIVE=dev"
+    ports:
+    - ${ENV_NUM}001:8080
