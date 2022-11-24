@@ -26,13 +26,13 @@ public class ZeebeAdapter implements BpmnEngine {
     private final String PROCESS_ID = "poc-process";
 
     @Override
-    public void startProcess(){
+    public void startProcess(Map<String, Object> variables){
         final ProcessInstanceEvent event =
             client
                 .newCreateInstanceCommand()
                 .bpmnProcessId(PROCESS_ID)
                 .latestVersion()
-                .variables(Map.of("message_content", "Hello from the Spring Boot get started"))
+                .variables(variables)
                 .send()
                 .join();
 

@@ -28,15 +28,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-//@EnableGlobalMethodSecurity(prePostEnabled = true)
-//@EnableConfigurationProperties
-//@RequiredArgsConstructor
 public class WebSecurityConfig implements WebMvcConfigurer {
-
-//    @Override
-//    public void addCorsMappings(CorsRegistry registry) {
-//        WebMvcConfigurer.super.addCorsMappings(registry);
-//    }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
@@ -53,7 +45,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors().configurationSource(corsConfigurationSource())
+        http.cors()
             .and()
                 .csrf().disable()
             .authorizeRequests()

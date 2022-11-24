@@ -9,5 +9,5 @@ import java.util.List;
  */
 @Data
 public class StartProcessDto {
-    List<String> variables;
+    String startParam;
 }
