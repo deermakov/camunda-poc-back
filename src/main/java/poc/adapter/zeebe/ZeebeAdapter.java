@@ -63,23 +63,38 @@ public class ZeebeAdapter implements BpmnEngine {
 
         log.info("inputData(): processId = {}, inputData = {}", processId, inputData);
 
-        long key = userTaskInfoHolder.getUserTaskKey(processId, "input-data");
+        long taskKey = userTaskInfoHolder.getUserTaskKey(processId, "input-data");
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("inputData", inputData);
 
         client
-            .newPublishMessageCommand()
-            .messageName("input-data-arrived")
-            .correlationKey(String.valueOf(processId))
+            .newCompleteCommand(taskKey)
             .variables(variables)
             .send()
             .join();
 
-        userTaskInfoHolder.unregisterUserTask(processId, key);
+        userTaskInfoHolder.unregisterUserTask(processId, taskKey);
     }
 
-    @JobWorker(type = "io.camunda.zeebe:userTask")
+    @Override
+    public void terminate(long processId) {
+
+        log.info("terminate(): processId = {}", processId);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("terminated", true);
+
+        client
+            .newPublishMessageCommand()
+            .messageName("terminate")
+            .correlationKey(String.valueOf(processId))
+            .variables(variables)
+            .send()
+            .join();
+    }
+
+    @JobWorker(type = "io.camunda.zeebe:userTask", autoComplete = false)
     public void handleUserTask(final ActivatedJob job) {
 
         long processId = job.getProcessInstanceKey();

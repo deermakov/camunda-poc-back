@@ -9,4 +9,6 @@ public interface BpmnEngine {
     long startProcess(String startParam);
 
     void inputData(long processId, String inputData);
+
+    void terminate(long processId);
 }
