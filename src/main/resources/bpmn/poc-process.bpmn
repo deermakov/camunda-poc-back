@@ -31,7 +31,7 @@
   </bpmn:process>
   <bpmn:message id="Message_26sqk3s" name="terminate">
     <bpmn:extensionElements>
-      <zeebe:subscription correlationKey="=processId" />
+      <zeebe:subscription correlationKey="=processExternalId" />
     </bpmn:extensionElements>
   </bpmn:message>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">

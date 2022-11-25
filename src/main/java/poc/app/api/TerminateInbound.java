@@ -4,5 +4,5 @@ package poc.app.api;
  * todo Document type ProcessDataInbound
  */
 public interface TerminateInbound {
-    void execute(long processId);
+    void execute(String processExternalId);
 }

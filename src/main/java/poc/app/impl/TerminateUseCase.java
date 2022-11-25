@@ -16,7 +16,7 @@ public class TerminateUseCase implements TerminateInbound {
     private final BpmnEngine bpmnEngine;
 
     @Override
-    public void execute(long processId) {
-        bpmnEngine.terminate(processId);
+    public void execute(String processExternalId) {
+        bpmnEngine.terminate(processExternalId);
     }
 }

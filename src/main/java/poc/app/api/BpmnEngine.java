@@ -6,9 +6,9 @@ import java.util.Map;
  * todo Document type BpmnEngine
  */
 public interface BpmnEngine {
-    long startProcess(String startParam);
+    void startProcess(String startParam, String processExternalId);
 
-    void inputData(long processId, String inputData);
+    void inputData(String processExternalId, String inputData);
 
-    void terminate(long processId);
+    void terminate(String processExternalId);
 }

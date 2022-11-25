@@ -24,7 +24,7 @@ public class FrontController {
     @PostMapping("/start")
     public StartProcessResponseDto startProcess(@RequestBody StartProcessRequestDto request){
         log.info("startProcess(): {}", request);
-        long processId = startProcessInbound.execute(request.getStartParam());
+        String processId = startProcessInbound.execute(request.getStartParam());
         return new StartProcessResponseDto(processId);
     }
 

@@ -6,6 +6,7 @@ import poc.app.api.BpmnEngine;
 import poc.app.api.StartProcessInbound;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * todo Document type StartProcessUseCase
@@ -15,7 +16,9 @@ import java.util.Map;
 public class StartProcessUseCase implements StartProcessInbound {
     private final BpmnEngine bpmnEngine;
     @Override
-    public long execute(String inputData) {
-        return bpmnEngine.startProcess(inputData);
+    public String execute(String inputData) {
+        String processExternalId = UUID.randomUUID().toString();
+        bpmnEngine.startProcess(inputData, processExternalId);
+        return processExternalId;
     }
 }

@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class UserTask {
-    private long processId;
+    private String processId;
     private String elementId; // user task element id
     private long key; // user task key
 }

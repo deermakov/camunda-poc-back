@@ -30,9 +30,10 @@ public class ZeebeAdapter implements BpmnEngine {
     private final String PROCESS_DEFINITION_ID = "poc-process";
 
     @Override
-    public long startProcess(String startParam){
+    public void startProcess(String startParam, String processExternalId){
         Map<String, Object> variables = new HashMap<>();
         variables.put("startParam", startParam);
+        variables.put("processExternalId", processExternalId);
 
         final ProcessInstanceEvent event =
             client
@@ -43,27 +44,16 @@ public class ZeebeAdapter implements BpmnEngine {
                 .send()
                 .join();
 
-        long processId = event.getProcessInstanceKey();
-
-        variables.put("processId", processId);
-        client
-            .newSetVariablesCommand(processId)
-            .variables(variables)
-            .send()
-            .join();
-
-        log.info("startProcess(): process started for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
-            event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
-
-        return processId;
+        log.info("startProcess(): process started for processExternalId = {}, processDefinitionKey={}, bpmnProcessId={}, version={}, processInstanceKey={}",
+            processExternalId, event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
     }
 
     @Override
-    public void inputData(long processId, String inputData) {
+    public void inputData(String processExternalId, String inputData) {
 
-        log.info("inputData(): processId = {}, inputData = {}", processId, inputData);
+        log.info("inputData(): processExternalId = {}, inputData = {}", processExternalId, inputData);
 
-        long taskKey = userTaskInfoHolder.getUserTaskKey(processId, "input-data");
+        long taskKey = userTaskInfoHolder.getUserTaskKey(processExternalId, "input-data");
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("inputData", inputData);
@@ -74,13 +64,13 @@ public class ZeebeAdapter implements BpmnEngine {
             .send()
             .join();
 
-        userTaskInfoHolder.unregisterUserTask(processId, taskKey);
+        userTaskInfoHolder.unregisterUserTask(processExternalId, taskKey);
     }
 
     @Override
-    public void terminate(long processId) {
+    public void terminate(String processExternalId) {
 
-        log.info("terminate(): processId = {}", processId);
+        log.info("terminate(): processId = {}", processExternalId);
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("terminated", true);
@@ -88,22 +78,22 @@ public class ZeebeAdapter implements BpmnEngine {
         client
             .newPublishMessageCommand()
             .messageName("terminate")
-            .correlationKey(String.valueOf(processId))
+            .correlationKey(processExternalId)
             .variables(variables)
             .send()
             .join();
     }
 
-    @JobWorker(type = "io.camunda.zeebe:userTask", autoComplete = false)
+    @JobWorker(type = "io.camunda.zeebe:userTask", autoComplete = false, fetchVariables = "processExternalId")
     public void handleUserTask(final ActivatedJob job) {
 
-        long processId = job.getProcessInstanceKey();
+        String processExternalId = job.getVariablesAsMap().get("processExternalId").toString();
         String elementId = job.getElementId();
         long key = job.getKey();
 
-        log.info("handleUserTask(): processId = {}, elementId = {}, key = {}", processId, elementId, key);
+        log.info("handleUserTask(): processExternalId = {}, elementId = {}, key = {}", processExternalId, elementId, key);
 
-        userTaskInfoHolder.registerUserTask(processId, elementId, key);
+        userTaskInfoHolder.registerUserTask(processExternalId, elementId, key);
     }
 
     @JobWorker(type = "process-data")

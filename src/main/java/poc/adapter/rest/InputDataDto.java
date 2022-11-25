@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class InputDataDto {
-    private long processId;
+    private String processId;
     private String inputData;
 }

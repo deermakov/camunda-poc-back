@@ -9,5 +9,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class StartProcessResponseDto {
-    private long processId;
+    private String processId;
 }

@@ -16,7 +16,7 @@ public class InputDataUseCase implements InputDataInbound {
     private final BpmnEngine bpmnEngine;
 
     @Override
-    public void execute(long processId, String inputData) {
-        bpmnEngine.inputData(processId, inputData);
+    public void execute(String processExternalId, String inputData) {
+        bpmnEngine.inputData(processExternalId, inputData);
     }
 }
