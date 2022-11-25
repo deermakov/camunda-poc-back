@@ -4,24 +4,24 @@
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0k42gxd</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_0k42gxd" sourceRef="StartEvent_1" targetRef="Activity-1" />
+    <bpmn:sequenceFlow id="Flow_0k42gxd" sourceRef="StartEvent_1" targetRef="input-data" />
     <bpmn:endEvent id="Event_1vt9vp4">
       <bpmn:incoming>Flow_0sgcbep</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1oukq73" sourceRef="Activity-1" targetRef="Activity-2" />
-    <bpmn:userTask id="Activity-1" name="Input data">
+    <bpmn:sequenceFlow id="Flow_1oukq73" sourceRef="input-data" targetRef="hwbfhwbhbwjeb" />
+    <bpmn:userTask id="input-data" name="Input data">
       <bpmn:extensionElements />
       <bpmn:incoming>Flow_0k42gxd</bpmn:incoming>
       <bpmn:outgoing>Flow_1oukq73</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:serviceTask id="Activity-2" name="Process data">
+    <bpmn:serviceTask id="hwbfhwbhbwjeb" name="Process data">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="process-data" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1oukq73</bpmn:incoming>
       <bpmn:outgoing>Flow_0sgcbep</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_0sgcbep" sourceRef="Activity-2" targetRef="Event_1vt9vp4" />
+    <bpmn:sequenceFlow id="Flow_0sgcbep" sourceRef="hwbfhwbhbwjeb" targetRef="Event_1vt9vp4" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="poc-process">
@@ -31,11 +31,11 @@
       <bpmndi:BPMNShape id="Event_1vt9vp4_di" bpmnElement="Event_1vt9vp4">
         <dc:Bounds x="742" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0bg8k5z_di" bpmnElement="Activity-1">
+      <bpmndi:BPMNShape id="Activity_0bg8k5z_di" bpmnElement="input-data">
         <dc:Bounds x="280" y="77" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_15ibxt3_di" bpmnElement="Activity-2">
+      <bpmndi:BPMNShape id="Activity_15ibxt3_di" bpmnElement="hwbfhwbhbwjeb">
         <dc:Bounds x="510" y="77" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>

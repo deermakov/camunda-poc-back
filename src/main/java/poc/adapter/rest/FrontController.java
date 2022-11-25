@@ -1,14 +1,10 @@
 package poc.adapter.rest;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import poc.app.api.InputDataInbound;
 import poc.app.api.StartProcessInbound;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * todo Document type FrontController
@@ -23,16 +19,17 @@ public class FrontController {
     private final InputDataInbound inputDataInbound;
 
     @PostMapping("/start")
-    public void startProcess(@RequestBody StartProcessDto request){
-        log.info("request: {}", request);
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("startParam", request.getStartParam());
-        startProcessInbound.execute(variables);
+    public StartProcessResponseDto startProcess(@RequestBody StartProcessRequestDto request){
+        log.info("startProcess(): {}", request);
+        long processId = startProcessInbound.execute(request.getStartParam());
+        log.info("startProcess(): process created - {}", processId);
+        return new StartProcessResponseDto(processId);
     }
 
     @PostMapping("/input-data")
-    public void inputData(){
-        inputDataInbound.execute();
+    public void inputData(@RequestBody InputDataDto request){
+        log.info("inputData(): {}", request);
+        inputDataInbound.execute(request.getProcessId(), request.getInputData());
     }
 
 }

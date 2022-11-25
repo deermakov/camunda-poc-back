@@ -15,7 +15,7 @@ import java.util.Map;
 public class StartProcessUseCase implements StartProcessInbound {
     private final BpmnEngine bpmnEngine;
     @Override
-    public void execute(Map<String, Object> variables) {
-        bpmnEngine.startProcess(variables);
+    public long execute(String inputData) {
+        return bpmnEngine.startProcess(inputData);
     }
 }

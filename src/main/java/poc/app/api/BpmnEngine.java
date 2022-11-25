@@ -6,5 +6,7 @@ import java.util.Map;
  * todo Document type BpmnEngine
  */
 public interface BpmnEngine {
-    void startProcess(Map<String, Object> variables);
+    long startProcess(String startParam);
+
+    void inputData(long processId, String inputData);
 }

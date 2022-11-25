@@ -7,9 +7,11 @@ import io.camunda.zeebe.spring.client.lifecycle.ZeebeClientLifecycle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import poc.adapter.zeebe.state.UserTaskInfoHolder;
 import poc.app.api.BpmnEngine;
 import poc.app.api.ProcessDataInbound;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,28 +25,66 @@ public class ZeebeAdapter implements BpmnEngine {
 
     private final ProcessDataInbound processDataInbound;
 
-    private final String PROCESS_ID = "poc-process";
+    private final UserTaskInfoHolder userTaskInfoHolder;
+
+    private final String PROCESS_DEFINITION_ID = "poc-process";
 
     @Override
-    public void startProcess(Map<String, Object> variables){
+    public long startProcess(String startParam){
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("startParam", startParam);
+
         final ProcessInstanceEvent event =
             client
                 .newCreateInstanceCommand()
-                .bpmnProcessId(PROCESS_ID)
+                .bpmnProcessId(PROCESS_DEFINITION_ID)
                 .latestVersion()
                 .variables(variables)
                 .send()
                 .join();
 
+        long processId = event.getProcessInstanceKey();
+
         log.info("Started instance for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
             event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
+
+        return processId;
+    }
+
+    @Override
+    public void inputData(long processId, String inputData) {
+
+        long key = userTaskInfoHolder.getUserTaskKey(processId, "input-data");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("inputData", inputData);
+
+        client
+            .newCompleteCommand(key)
+            .variables(variables)
+            .send()
+            .join();
+
+        userTaskInfoHolder.unregisterUserTask(processId, key);
+    }
+
+    @JobWorker(type = "io.camunda.zeebe:userTask")
+    public void handleUserTask(final ActivatedJob job) {
+
+        long processId = job.getProcessInstanceKey();
+        String elementId = job.getElementId();
+        long key = job.getKey();
+
+        log.info("handleUserTask(): processId = {}, elementId = {}, key = {}", processId, elementId, key);
+
+        userTaskInfoHolder.registerUserTask(processId, elementId, key);
     }
 
     @JobWorker(type = "process-data")
     public void processData(final ActivatedJob job) {
 
         final String message_content = (String) job.getVariablesAsMap().get("message_content");
-        log.info("Sending email with message content: {}", message_content);
+        log.info("processData(): {}", message_content);
 
         processDataInbound.execute();
     }
