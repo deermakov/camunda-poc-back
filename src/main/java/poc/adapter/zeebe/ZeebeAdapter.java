@@ -84,10 +84,12 @@ public class ZeebeAdapter implements BpmnEngine {
             .join();
     }
 
+    // autoComplete = false чтобы user task'а не завершалась и висела в task list'е
+    // до выполнения inputData() через rest
     @JobWorker(type = "io.camunda.zeebe:userTask", autoComplete = false, fetchVariables = "processExternalId")
     public void handleUserTask(final ActivatedJob job) {
 
-        String processExternalId = job.getVariablesAsMap().get("processExternalId").toString();
+        String processExternalId = (String) job.getVariablesAsMap().get("processExternalId");
         String elementId = job.getElementId();
         long key = job.getKey();
 
@@ -96,12 +98,23 @@ public class ZeebeAdapter implements BpmnEngine {
         userTaskInfoHolder.registerUserTask(processExternalId, elementId, key);
     }
 
-    @JobWorker(type = "process-data")
+    // autoComplete = false чтобы можно было обновить переменные в процессе, см. в коде
+    @JobWorker(type = "process-data", autoComplete = false)
     public void processData(final ActivatedJob job) {
 
-        final String message_content = (String) job.getVariablesAsMap().get("message_content");
-        log.info("processData(): {}", message_content);
+        String startParam = (String) job.getVariablesAsMap().get("startParam");
+        String inputData = (String) job.getVariablesAsMap().get("inputData");
 
-        processDataInbound.execute();
+        String processedData = processDataInbound.execute(startParam, inputData);
+        log.info("processedData: {}", processedData);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("processedData", processedData);
+
+        client
+            .newCompleteCommand(job.getKey())
+            .variables(variables)
+            .send()
+            .join();
     }
 }

@@ -4,5 +4,5 @@ package poc.app.api;
  * todo Document type ProcessDataInbound
  */
 public interface ProcessDataInbound {
-    void execute();
+    String execute(String startParam, String inputData);
 }
