@@ -45,7 +45,14 @@ public class ZeebeAdapter implements BpmnEngine {
 
         long processId = event.getProcessInstanceKey();
 
-        log.info("Started instance for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
+        variables.put("processId", processId);
+        client
+            .newSetVariablesCommand(processId)
+            .variables(variables)
+            .send()
+            .join();
+
+        log.info("startProcess(): process started for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
             event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
 
         return processId;
@@ -54,13 +61,17 @@ public class ZeebeAdapter implements BpmnEngine {
     @Override
     public void inputData(long processId, String inputData) {
 
+        log.info("inputData(): processId = {}, inputData = {}", processId, inputData);
+
         long key = userTaskInfoHolder.getUserTaskKey(processId, "input-data");
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("inputData", inputData);
 
         client
-            .newCompleteCommand(key)
+            .newPublishMessageCommand()
+            .messageName("input-data-arrived")
+            .correlationKey(String.valueOf(processId))
             .variables(variables)
             .send()
             .join();

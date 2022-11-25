@@ -22,7 +22,6 @@ public class FrontController {
     public StartProcessResponseDto startProcess(@RequestBody StartProcessRequestDto request){
         log.info("startProcess(): {}", request);
         long processId = startProcessInbound.execute(request.getStartParam());
-        log.info("startProcess(): process created - {}", processId);
         return new StartProcessResponseDto(processId);
     }
 
