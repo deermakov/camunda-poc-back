@@ -7,5 +7,5 @@ import lombok.Data;
  */
 @Data
 public class TerminateDto {
-    private String processId;
+    private String processExternalId;
 }

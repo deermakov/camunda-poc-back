@@ -7,7 +7,7 @@ use the repository https://github.com/camunda/camunda-platform#using-docker-comp
 
 Clone that repo and issue the following command to start your environment:
 
-docker-compose up -d
+_docker-compose up -d_
 
 Wait a few minutes for the environment to start up and settle down. Monitor the logs, especially the Keycloak container log, to ensure the components have started.
 
@@ -18,6 +18,7 @@ Now you can navigate to the different web apps and log in with the user demo and
 - Optimize: http://localhost:8083
 - Identity: http://localhost:8084
 - Elasticsearch: http://localhost:9200
+- Kibana: http://localhost:5601
 
 KeyCloak is used to manage users. Here you can log in with the user admin and password admin
 
@@ -27,7 +28,7 @@ The workflow engine Zeebe is available using gRPC at localhost:26500.
 
 To tear down the whole environment run the following command
 
-docker-compose down -v
+_docker-compose down -v_
 
 ### Programming get started manual
 https://github.com/camunda/camunda-platform-get-started/tree/main/spring

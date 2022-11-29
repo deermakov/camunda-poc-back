@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import poc.app.api.BpmnEngine;
 import poc.app.api.InputDataInbound;
-import poc.app.api.ProcessDataInbound;
 
 /**
  * todo Document type ProcessDataUseCase

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * todo Document type UserTask
+ * todo Document type ZeebeRecord
  */
 @Data
 @AllArgsConstructor

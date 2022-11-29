@@ -1,13 +1,11 @@
 package poc.adapter.zeebe.state;
 
 import lombok.NonNull;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * todo Document type UserTaskInfoHolder
@@ -17,7 +15,7 @@ import java.util.stream.Collectors;
 public class UserTaskInfoHolder {
     private final List<UserTask> userTasks = new ArrayList<>();
 
-    synchronized public void registerUserTask(String processId, String elementId, long key){
+    synchronized public void registerUserTask(String processId, String elementId, long key) {
         log.info("registerUserTask(): processId = {}, elementId = {}, key = {}", processId, elementId, key);
 
         unregisterUserTask(processId, key);//чтобы не было дубликата
@@ -26,7 +24,7 @@ public class UserTaskInfoHolder {
         userTasks.add(userTask);
     }
 
-    synchronized public void unregisterUserTask(String processId, long key){
+    synchronized public void unregisterUserTask(String processId, long key) {
         userTasks.stream()
             .filter(userTask -> processId.equals(userTask.getProcessId()) &&
                 key == userTask.getKey())
@@ -34,7 +32,7 @@ public class UserTaskInfoHolder {
             .map(userTasks::remove);
     }
 
-    synchronized public long getUserTaskKey(String processId, @NonNull String elementId){
+    synchronized public long getUserTaskKey(String processId, @NonNull String elementId) {
         return userTasks.stream()
             .filter(userTask -> processId.equals(userTask.getProcessId()) &&
                 elementId.equals(userTask.getElementId()))

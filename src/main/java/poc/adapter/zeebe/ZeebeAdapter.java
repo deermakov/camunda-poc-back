@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import poc.adapter.zeebe.state.UserTaskInfoHolder;
 import poc.app.api.BpmnEngine;
 import poc.app.api.ProcessDataInbound;
+import poc.app.impl.TaskList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class ZeebeAdapter implements BpmnEngine {
+    private final TaskList taskList;
+
     private final ZeebeClientLifecycle client;
 
     private final ProcessDataInbound processDataInbound;
@@ -30,7 +33,7 @@ public class ZeebeAdapter implements BpmnEngine {
     private final String PROCESS_DEFINITION_ID = "poc-process";
 
     @Override
-    public void startProcess(String startParam, String processExternalId){
+    public void startProcess(String startParam, String processExternalId) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("startParam", startParam);
         variables.put("processExternalId", processExternalId);
@@ -70,6 +73,9 @@ public class ZeebeAdapter implements BpmnEngine {
     @Override
     public void terminate(String processExternalId) {
 
+        log.info("TaskList: getAllActiveUserTasks() = {}", taskList.getAllActiveUserTasks());
+        log.info("TaskList: getActiveUserTasks() = {}", taskList.getActiveUserTasks("demo"));
+
         log.info("terminate(): processId = {}", processExternalId);
 
         Map<String, Object> variables = new HashMap<>();
@@ -101,6 +107,9 @@ public class ZeebeAdapter implements BpmnEngine {
     // autoComplete = false чтобы можно было обновить переменные в процессе, см. в коде
     @JobWorker(type = "process-data", autoComplete = false)
     public void processData(final ActivatedJob job) {
+
+        log.info("TaskList: getAllActiveUserTasks() = {}", taskList.getAllActiveUserTasks());
+        log.info("TaskList: getActiveUserTasks() = {}", taskList.getActiveUserTasks("demo"));
 
         String startParam = (String) job.getVariablesAsMap().get("startParam");
         String inputData = (String) job.getVariablesAsMap().get("inputData");

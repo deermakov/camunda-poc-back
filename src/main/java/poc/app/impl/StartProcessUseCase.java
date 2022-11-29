@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import poc.app.api.BpmnEngine;
 import poc.app.api.StartProcessInbound;
 
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -15,6 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StartProcessUseCase implements StartProcessInbound {
     private final BpmnEngine bpmnEngine;
+
     @Override
     public String execute(String inputData) {
         String processExternalId = UUID.randomUUID().toString();
