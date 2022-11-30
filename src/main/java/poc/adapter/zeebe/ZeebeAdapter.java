@@ -73,9 +73,6 @@ public class ZeebeAdapter implements BpmnEngine {
     @Override
     public void terminate(String processExternalId) {
 
-        log.info("TaskList: getAllActiveUserTasks() = {}", taskList.getAllActiveUserTasks());
-        log.info("TaskList: getActiveUserTasks() = {}", taskList.getActiveUserTasks("demo"));
-
         log.info("terminate(): processId = {}", processExternalId);
 
         Map<String, Object> variables = new HashMap<>();

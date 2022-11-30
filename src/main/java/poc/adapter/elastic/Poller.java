@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.camunda.zeebe.protocol.record.ValueType.*;
-import static io.camunda.zeebe.protocol.record.intent.JobIntent.COMPLETED;
-import static io.camunda.zeebe.protocol.record.intent.JobIntent.CREATED;
+import static io.camunda.zeebe.protocol.record.intent.JobIntent.*;
 import static io.camunda.zeebe.protocol.record.intent.ProcessInstanceIntent.ELEMENT_COMPLETED;
+import static io.camunda.zeebe.protocol.record.intent.ProcessInstanceIntent.ELEMENT_TERMINATED;
 import static io.camunda.zeebe.protocol.record.value.BpmnElementType.PROCESS;
 
 /**
@@ -47,7 +47,7 @@ public class Poller {
                 "must": [
                     {
                         "range": {
-                            "timestamp": {
+                            "position": {
                                 "gt": "%s"
                             }
                         }
@@ -56,13 +56,13 @@ public class Poller {
             }
         }
         """;
-    private long lastTimestampBoundary = 0;
+    private long lastPosition = 0;
 
     @Scheduled(fixedRate = 5000)
     public void poll() {
         log.info("poll()");
 
-        Query query = new StringQuery(String.format(queryTxt, lastTimestampBoundary));
+        Query query = new StringQuery(String.format(queryTxt, lastPosition));
         SearchHits<?> searchHits = elasticsearchOperations.search(query, Object.class, IndexCoordinates.of("zeebe-record-*"));
         List<Record> newRecordsObj = searchHits.getSearchHits().stream().map(
             searchHit -> {
@@ -71,7 +71,7 @@ public class Poller {
                 Record record = null;
                 try {
                     String json = rawMapper.writeValueAsString(obj);
-                    //                    log.info("json = {}", json);
+                    log.info("poll(): {}", json);
                     record = mapper.readValue(json, new TypeReference<Record<?>>() {
                     });
                     //                    log.info("class = {}", record.getValue().getClass());
@@ -81,29 +81,13 @@ public class Poller {
                 }
             }
         ).collect(Collectors.toList());
-/*
-        List<JsonNode> newRecords = recordRepository.findNewer(lastTimestampBoundary);
-        List<Record> newRecordsObj = newRecords.stream().map(
-            jsonNode -> {
-                Record record = null;
-                String json = jsonNode.toString();
-                log.info("json = {}", json);
-                try {
-                    record = mapper.readValue(json, new TypeReference<Record<?>>() {
-                    });
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                return record;
-            }
-        ).toList();
-*/
-        newRecordsObj.sort((o1, o2) -> (int) (o1.getTimestamp() - o2.getTimestamp()));
+
+        newRecordsObj.sort((o1, o2) -> (int) (o1.getPosition() - o2.getPosition()));
 
         newRecordsObj.forEach(
             record -> {
                 //                log.info("poll(): {}", record);
-                lastTimestampBoundary = record.getTimestamp();
+                lastPosition = record.getPosition();
                 mapRecord(record);
             }
         );
@@ -118,7 +102,7 @@ public class Poller {
         } else if (record.getValue() instanceof ProcessInstanceRecordValue value) {
             if (record.getValueType() == PROCESS_INSTANCE &&
                 value.getBpmnElementType() == PROCESS &&
-                record.getIntent() == ELEMENT_COMPLETED) {
+                (record.getIntent() == ELEMENT_COMPLETED || record.getIntent() == ELEMENT_TERMINATED)) {
                 long processInstanceKey = value.getProcessInstanceKey();
                 taskList.registerProcessEnd(processInstanceKey);
             }
@@ -129,7 +113,7 @@ public class Poller {
                 record.getIntent() == CREATED) {
                 taskList.registerUserTaskStart(processInstanceKey, key, record);
             } else if (record.getValueType() == JOB &&
-                record.getIntent() == COMPLETED) {
+                (record.getIntent() == COMPLETED || record.getIntent() == CANCELED || record.getIntent() == TIMED_OUT)) {
                 taskList.registerUserTaskEnd(processInstanceKey, key);
             }
         }
