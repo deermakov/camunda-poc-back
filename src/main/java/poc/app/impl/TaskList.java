@@ -2,8 +2,11 @@ package poc.app.impl;
 
 import io.camunda.zeebe.protocol.record.Record;
 import io.camunda.zeebe.protocol.record.value.JobRecordValue;
+import io.camunda.zeebe.protocol.record.value.ProcessInstanceCreationRecordValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import poc.domain.Process;
+import poc.domain.UserTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,50 +20,58 @@ import java.util.Map;
 @Slf4j
 public class TaskList {
 
-    // 1й ключ - ключ процесса (value.processInstanceKey)
-    // 2й ключ - ключ user task job'а (key)
-    // значение - Record
-    private final Map<Long, Map<Long, Record<JobRecordValue>>> activeUserTasks = new HashMap<>();
+    private static final String VAR_PROCESS_EXTERNAL_ID = "processExternalId";
+    private static final String HEADER_ASSIGNEE = "io.camunda.zeebe:assignee";
 
-    synchronized public void registerProcessStart(long processInstanceKey) {
+    // ключ - ключ процесса (value.processInstanceKey)
+    private final Map<Long, Process> activeProcesses = new HashMap<>();
+
+
+    synchronized public void registerProcessStart(long processInstanceKey, ProcessInstanceCreationRecordValue value) {
         log.info("registerProcessStart(): processInstanceKey = {}", processInstanceKey);
-        activeUserTasks.put(processInstanceKey, new HashMap<>());
+        activeProcesses.put(processInstanceKey, new Process(processInstanceKey, (String)value.getVariables().get(VAR_PROCESS_EXTERNAL_ID)));
     }
 
     synchronized public void registerProcessEnd(long processInstanceKey) {
         log.info("registerProcessEnd(): processInstanceKey = {}", processInstanceKey);
-        activeUserTasks.remove(processInstanceKey);
+        activeProcesses.remove(processInstanceKey);
     }
 
     synchronized public void registerUserTaskStart(long processInstanceKey, long key, Record<JobRecordValue> record) {
         log.info("registerUserTaskStart(): processInstanceKey = {}, key = {}", processInstanceKey, key);
-        Map<Long, Record<JobRecordValue>> userTasks = activeUserTasks.get(processInstanceKey);
-        userTasks.put(key, record);
+        Process process = activeProcesses.get(processInstanceKey);
+        UserTask userTask = new UserTask(key,
+            record.getValue().getElementId(),
+            record.getValue().getCustomHeaders().get(HEADER_ASSIGNEE),
+            process);
+        process.getUserTasks().put(key, userTask);
     }
 
     synchronized public void registerUserTaskEnd(long processInstanceKey, long key) {
         log.info("registerUserTaskEnd(): processInstanceKey = {}, key = {}", processInstanceKey, key);
-        Map<Long, Record<JobRecordValue>> userTasks = activeUserTasks.get(processInstanceKey);
-        userTasks.remove(key);
+        Process process = activeProcesses.get(processInstanceKey);
+        process.getUserTasks().remove(key);
     }
 
-    public List<Record<JobRecordValue>> getAllActiveUserTasks() {
-        List<Record<JobRecordValue>> result = new ArrayList<>();
+    public List<UserTask> getAllActiveUserTasks() {
+        List<UserTask> result = new ArrayList<>();
 
-        activeUserTasks.values().forEach(
-            processUserTasks -> result.addAll(processUserTasks.values())
+        activeProcesses.values().forEach(
+            process -> {
+                result.addAll(process.getUserTasks().values());
+            }
         );
 
         return result;
     }
 
-    public List<Record<JobRecordValue>> getActiveUserTasks(String assignee) {
-        List<Record<JobRecordValue>> result = new ArrayList<>();
+    public List<UserTask> getActiveUserTasks(String assignee) {
+        List<UserTask> result = new ArrayList<>();
 
-        activeUserTasks.values().forEach(
-            processUserTasks -> processUserTasks.values()
+        activeProcesses.values().forEach(
+            process -> process.getUserTasks().values()
                 .stream()
-                .filter(jobRecordValue -> assignee.equals(jobRecordValue.getValue().getCustomHeaders().get("io.camunda.zeebe:assignee")))
+                .filter(userTask -> assignee.equals(userTask.getAssignee()))
                 .forEach(result::add)
         );
 

@@ -9,6 +9,7 @@ import poc.app.api.GetTaskListInbound;
 import poc.app.api.InputDataInbound;
 import poc.app.api.StartProcessInbound;
 import poc.app.api.TerminateInbound;
+import poc.domain.UserTask;
 
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class FrontController {
     }
 
     @GetMapping("/tasklist/{assignee}")
-    public List<Record<JobRecordValue>> getTaskList(@PathVariable(required = false) String assignee) {
+    public List<UserTask> getTaskList(@PathVariable(required = false) String assignee) {
         log.info("getTaskList(): {}", assignee);
         return getTaskListInbound.execute(assignee);
     }

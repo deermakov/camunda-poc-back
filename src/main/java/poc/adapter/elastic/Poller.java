@@ -64,11 +64,11 @@ public class Poller {
 
         Query query = new StringQuery(String.format(queryTxt, lastPosition));
         SearchHits<?> searchHits = elasticsearchOperations.search(query, Object.class, IndexCoordinates.of("zeebe-record-*"));
-        List<Record> newRecordsObj = searchHits.getSearchHits().stream().map(
+        List<Record<?>> newRecordsObj = searchHits.getSearchHits().stream().map(
             searchHit -> {
                 //                log.info("jsonNodeSearchHit = {}", searchHit);
                 Object obj = searchHit.getContent();
-                Record record = null;
+                Record<?> record;
                 try {
                     String json = rawMapper.writeValueAsString(obj);
                     log.info("poll(): {}", json);
@@ -80,9 +80,8 @@ public class Poller {
                     throw new RuntimeException(e);
                 }
             }
-        ).collect(Collectors.toList());
-
-        newRecordsObj.sort((o1, o2) -> (int) (o1.getPosition() - o2.getPosition()));
+        ).sorted((o1, o2) -> (int) (o1.getPosition() - o2.getPosition()))
+        .collect(Collectors.toList());
 
         newRecordsObj.forEach(
             record -> {
@@ -97,7 +96,7 @@ public class Poller {
         if (record.getValue() instanceof ProcessInstanceCreationRecordValue value) {
             if (record.getValueType() == PROCESS_INSTANCE_CREATION) {
                 long processInstanceKey = value.getProcessInstanceKey();
-                taskList.registerProcessStart(processInstanceKey);
+                taskList.registerProcessStart(processInstanceKey, value);
             }
         } else if (record.getValue() instanceof ProcessInstanceRecordValue value) {
             if (record.getValueType() == PROCESS_INSTANCE &&
