@@ -24,6 +24,7 @@ import poc.app.impl.TaskList;
 import poc.domain.BpmnProcess;
 import poc.domain.BpmnUserTask;
 
+import java.util.Date;
 import java.util.List;
 
 import static io.camunda.zeebe.protocol.record.ValueType.*;
@@ -50,7 +51,7 @@ public class ElasticSearchPoller {
     private final ElasticsearchOperations elasticsearchOperations;
 
     private final TaskList taskList;
-    String queryTxt = """
+    private final String queryString = """
         {
             "bool": {
                 "must": [
@@ -58,6 +59,13 @@ public class ElasticSearchPoller {
                         "range": {
                             "position": {
                                 "gt": "%s"
+                            }
+                        }
+                    },
+                    {
+                        "range": {
+                            "timestamp": {
+                                "lt": "%s"
                             }
                         }
                     }
@@ -71,9 +79,15 @@ public class ElasticSearchPoller {
     public <T extends RecordValue> void poll() {
         log.info("poll(): lastPosition = {}", lastPosition);
 
+        // не вычитываем самые свежие записи, которые укладываются в последний refresh interval
+        // индекса в Elastic (1 сек), т.к. они могут не попасть в выборку (из-за того, что индекс
+        // не полностью обновлен) и потом уже никогда не вычитаются (т.к. lastPosition уже уедет
+        // за них)
+        long timestamp = new Date().getTime() - 1000;// default index refresh interval
+        String queryStringParameterized = String.format(queryString, lastPosition, timestamp);
         Pageable pageable = PageRequest.of(0, 1000);
         Sort sort = Sort.by(Sort.Direction.ASC, "position");
-        Query query = new StringQuery(String.format(queryTxt, lastPosition), pageable, sort);
+        Query query = new StringQuery(queryStringParameterized, pageable, sort);
 
         SearchHits<?> searchHits = elasticsearchOperations.search(query, Object.class, IndexCoordinates.of("zeebe-record-*"));
         List<Record<T>> newRecordsObj = searchHits.getSearchHits().stream().map(
