@@ -11,6 +11,7 @@ import io.camunda.zeebe.protocol.record.value.ProcessInstanceRecordValue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -68,11 +69,11 @@ public class ElasticSearchPoller {
 
     @Scheduled(fixedRate = 2000)
     public <T extends RecordValue> void poll() {
-        log.debug("poll(): lastPosition = {}", lastPosition);
+        log.info("poll(): lastPosition = {}", lastPosition);
 
-        Query query = new StringQuery(String.format(queryTxt, lastPosition));
-        query.addSort(Sort.by(Sort.Direction.ASC, "position"));
-        query.setPageable(PageRequest.ofSize(1000));
+        Pageable pageable = PageRequest.of(0, 1000);
+        Sort sort = Sort.by(Sort.Direction.ASC, "position");
+        Query query = new StringQuery(String.format(queryTxt, lastPosition), pageable, sort);
 
         SearchHits<?> searchHits = elasticsearchOperations.search(query, Object.class, IndexCoordinates.of("zeebe-record-*"));
         List<Record<T>> newRecordsObj = searchHits.getSearchHits().stream().map(
@@ -82,7 +83,7 @@ public class ElasticSearchPoller {
                 Record<T> record;
                 try {
                     String json = rawMapper.writeValueAsString(obj);
-                    //log.info("poll(): {}", json);
+                    log.info("poll(): {}", json);
                     record = mapper.readValue(json, new TypeReference<Record<T>>() {
                     });
                     //log.info("class = {}", record.getValue().getClass());
