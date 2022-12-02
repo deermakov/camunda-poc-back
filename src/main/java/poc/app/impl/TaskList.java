@@ -50,7 +50,11 @@ public class TaskList {
     synchronized public void registerUserTaskEnd(long processInstanceKey, long key) {
         log.info("registerUserTaskEnd(): processInstanceKey = {}, key = {}", processInstanceKey, key);
         Process process = activeProcesses.get(processInstanceKey);
-        process.getUserTasks().remove(key);
+        if (process != null) {
+            process.getUserTasks().remove(key);
+        } else {
+            log.warn("Unknown process, ignoring: {}", processInstanceKey);
+        }
     }
 
     public List<UserTask> getAllActiveUserTasks() {
