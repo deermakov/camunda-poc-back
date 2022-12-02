@@ -4,11 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.zeebe.protocol.jackson.ZeebeProtocolModule;
 import io.camunda.zeebe.protocol.record.Record;
+import io.camunda.zeebe.protocol.record.RecordValue;
 import io.camunda.zeebe.protocol.record.value.JobRecordValue;
 import io.camunda.zeebe.protocol.record.value.ProcessInstanceCreationRecordValue;
 import io.camunda.zeebe.protocol.record.value.ProcessInstanceRecordValue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -59,33 +62,35 @@ public class Poller {
     private long lastPosition = 0;
 
     @Scheduled(fixedRate = 5000)
-    public void poll() {
-        log.info("poll()");
+    public <T extends RecordValue> void poll() {
+        log.info("poll(): lastPosition = {}", lastPosition);
 
         Query query = new StringQuery(String.format(queryTxt, lastPosition));
+        query.addSort(Sort.by(Sort.Direction.ASC, "position"));
+        query.setPageable(PageRequest.ofSize(1000));
+
         SearchHits<?> searchHits = elasticsearchOperations.search(query, Object.class, IndexCoordinates.of("zeebe-record-*"));
-        List<Record<?>> newRecordsObj = searchHits.getSearchHits().stream().map(
+        List<Record<T>> newRecordsObj = searchHits.getSearchHits().stream().map(
             searchHit -> {
-                //                log.info("jsonNodeSearchHit = {}", searchHit);
+                //log.info("jsonNodeSearchHit = {}", searchHit);
                 Object obj = searchHit.getContent();
-                Record<?> record;
+                Record<T> record;
                 try {
                     String json = rawMapper.writeValueAsString(obj);
-                    log.info("poll(): {}", json);
-                    record = mapper.readValue(json, new TypeReference<Record<?>>() {
+                    //log.info("poll(): {}", json);
+                    record = mapper.readValue(json, new TypeReference<Record<T>>() {
                     });
-                    //                    log.info("class = {}", record.getValue().getClass());
+                    //log.info("class = {}", record.getValue().getClass());
                     return record;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }
-        ).sorted((o1, o2) -> (int) (o1.getPosition() - o2.getPosition()))
-        .collect(Collectors.toList());
+        ).toList();
 
         newRecordsObj.forEach(
             record -> {
-                //                log.info("poll(): {}", record);
+                log.info("poll(): record position = {}, valueType = {}, intent = {}", record.getPosition(), record.getValueType(), record.getIntent());
                 lastPosition = record.getPosition();
                 mapRecord(record);
             }
