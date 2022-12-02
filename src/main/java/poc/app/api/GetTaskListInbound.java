@@ -1,8 +1,6 @@
 package poc.app.api;
 
-import io.camunda.zeebe.protocol.record.Record;
-import io.camunda.zeebe.protocol.record.value.JobRecordValue;
-import poc.domain.UserTask;
+import poc.domain.BpmnUserTask;
 
 import java.util.List;
 
@@ -10,5 +8,5 @@ import java.util.List;
  * todo Document type ProcessDataInbound
  */
 public interface GetTaskListInbound {
-    List<UserTask> execute(String assignee);
+    List<BpmnUserTask> execute(String assignee);
 }

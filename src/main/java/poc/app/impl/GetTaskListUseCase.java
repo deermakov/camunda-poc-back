@@ -1,12 +1,10 @@
 package poc.app.impl;
 
-import io.camunda.zeebe.protocol.record.Record;
-import io.camunda.zeebe.protocol.record.value.JobRecordValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import poc.app.api.GetTaskListInbound;
-import poc.domain.UserTask;
+import poc.domain.BpmnUserTask;
 
 import java.util.List;
 
@@ -20,7 +18,7 @@ public class GetTaskListUseCase implements GetTaskListInbound {
     private final TaskList taskList;
 
     @Override
-    public List<UserTask> execute(String assignee) {
+    public List<BpmnUserTask> execute(String assignee) {
         if (StringUtils.hasText(assignee)) {
             return taskList.getActiveUserTasks(assignee);
         } else {

@@ -4,13 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * todo Document type UserTask
+ * todo Document type BpmnUserTask
  */
 @Data
 @AllArgsConstructor
-public class UserTask {
+public class BpmnUserTask {
     private long key;
     private String elementId;
     private String assignee;
-    private Process process;
+    private BpmnProcess process;
 }

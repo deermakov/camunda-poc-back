@@ -1,4 +1,4 @@
-package poc.adapter.elastic;
+package poc.adapter.zeebe;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +20,10 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import poc.app.impl.TaskList;
+import poc.domain.BpmnProcess;
+import poc.domain.BpmnUserTask;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.camunda.zeebe.protocol.record.ValueType.*;
 import static io.camunda.zeebe.protocol.record.intent.JobIntent.*;
@@ -31,12 +32,16 @@ import static io.camunda.zeebe.protocol.record.intent.ProcessInstanceIntent.ELEM
 import static io.camunda.zeebe.protocol.record.value.BpmnElementType.PROCESS;
 
 /**
- * todo Document type Poller
+ * todo Document type ElasticSearchPoller
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class Poller {
+public class ElasticSearchPoller {
+
+    private static final String VAR_PROCESS_EXTERNAL_ID = "processExternalId";
+    private static final String HEADER_ASSIGNEE = "io.camunda.zeebe:assignee";
+
     final ObjectMapper mapper = new ObjectMapper().registerModule(new ZeebeProtocolModule());
 
     final ObjectMapper rawMapper = new ObjectMapper();
@@ -61,9 +66,9 @@ public class Poller {
         """;
     private long lastPosition = 0;
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 2000)
     public <T extends RecordValue> void poll() {
-        log.info("poll(): lastPosition = {}", lastPosition);
+        log.debug("poll(): lastPosition = {}", lastPosition);
 
         Query query = new StringQuery(String.format(queryTxt, lastPosition));
         query.addSort(Sort.by(Sort.Direction.ASC, "position"));
@@ -101,7 +106,10 @@ public class Poller {
         if (record.getValue() instanceof ProcessInstanceCreationRecordValue value) {
             if (record.getValueType() == PROCESS_INSTANCE_CREATION) {
                 long processInstanceKey = value.getProcessInstanceKey();
-                taskList.registerProcessStart(processInstanceKey, value);
+                String processExternalId = (String) value.getVariables().get(VAR_PROCESS_EXTERNAL_ID);
+
+                BpmnProcess process = new BpmnProcess(processInstanceKey, processExternalId);
+                taskList.registerProcessStart(process);
             }
         } else if (record.getValue() instanceof ProcessInstanceRecordValue value) {
             if (record.getValueType() == PROCESS_INSTANCE &&
@@ -113,9 +121,18 @@ public class Poller {
         } else if (record.getValue() instanceof JobRecordValue value) {
             long processInstanceKey = value.getProcessInstanceKey();
             long key = record.getKey();
+
             if (record.getValueType() == JOB &&
                 record.getIntent() == CREATED) {
-                taskList.registerUserTaskStart(processInstanceKey, key, record);
+
+                BpmnProcess process = taskList.getActiveProcesses().get(processInstanceKey);
+
+                BpmnUserTask userTask = new BpmnUserTask(key,
+                    value.getElementId(),
+                    value.getCustomHeaders().get(HEADER_ASSIGNEE),
+                    process);
+
+                taskList.registerUserTaskStart(processInstanceKey, userTask);
             } else if (record.getValueType() == JOB &&
                 (record.getIntent() == COMPLETED || record.getIntent() == CANCELED || record.getIntent() == TIMED_OUT)) {
                 taskList.registerUserTaskEnd(processInstanceKey, key);

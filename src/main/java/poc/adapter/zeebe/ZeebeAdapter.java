@@ -81,23 +81,24 @@ public class ZeebeAdapter implements BpmnEngine {
             .send()
             .join();
     }
-/*
-    Пример worker'а для UserTask'ов
 
-    // autoComplete = false чтобы user task'а не завершалась и висела в task list'е
-    // до выполнения inputData() через rest
-    @JobWorker(type = "io.camunda.zeebe:userTask", autoComplete = false, fetchVariables = "processExternalId")
-    public void handleUserTask(final ActivatedJob job) {
+    /*
+        Пример worker'а для BpmnUserTask'ов
 
-        String processExternalId = (String) job.getVariablesAsMap().get("processExternalId");
-        String elementId = job.getElementId();
-        long key = job.getKey();
+        // autoComplete = false чтобы user task'а не завершалась и висела в task list'е
+        // до выполнения inputData() через rest
+        @JobWorker(type = "io.camunda.zeebe:userTask", autoComplete = false, fetchVariables = "processExternalId")
+        public void handleUserTask(final ActivatedJob job) {
 
-        log.info("handleUserTask(): processExternalId = {}, elementId = {}, key = {}", processExternalId, elementId, key);
+            String processExternalId = (String) job.getVariablesAsMap().get("processExternalId");
+            String elementId = job.getElementId();
+            long key = job.getKey();
 
-        userTaskInfoHolder.registerUserTask(processExternalId, elementId, key);
-    }
-*/
+            log.info("handleUserTask(): processExternalId = {}, elementId = {}, key = {}", processExternalId, elementId, key);
+
+            userTaskInfoHolder.registerUserTask(processExternalId, elementId, key);
+        }
+    */
     // autoComplete = false чтобы можно было обновить переменные в процессе, см. в коде
     @JobWorker(type = "process-data", autoComplete = false)
     public void processData(final ActivatedJob job) {

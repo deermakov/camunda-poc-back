@@ -5,21 +5,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * todo Document type Process
+ * todo Document type BpmnProcess
  */
 @Data
 @AllArgsConstructor
-public class Process {
-    private long processInstanceKey;
-    private String processExternalId;
-
+public class BpmnProcess {
     @JsonIgnore// для исключения циркулярной зависимости
     @ToString.Exclude
-    private final Map<Long, UserTask> userTasks = new HashMap<>();
+    private final Map<Long, BpmnUserTask> userTasks = new HashMap<>();
+    private long processInstanceKey;
+    private String processExternalId;
 }

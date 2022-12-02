@@ -1,7 +1,5 @@
 package poc.adapter.rest;
 
-import io.camunda.zeebe.protocol.record.Record;
-import io.camunda.zeebe.protocol.record.value.JobRecordValue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +7,7 @@ import poc.app.api.GetTaskListInbound;
 import poc.app.api.InputDataInbound;
 import poc.app.api.StartProcessInbound;
 import poc.app.api.TerminateInbound;
-import poc.domain.UserTask;
+import poc.domain.BpmnUserTask;
 
 import java.util.List;
 
@@ -47,7 +45,7 @@ public class FrontController {
     }
 
     @GetMapping("/tasklist/{assignee}")
-    public List<UserTask> getTaskList(@PathVariable(required = false) String assignee) {
+    public List<BpmnUserTask> getTaskList(@PathVariable(required = false) String assignee) {
         log.info("getTaskList(): {}", assignee);
         return getTaskListInbound.execute(assignee);
     }

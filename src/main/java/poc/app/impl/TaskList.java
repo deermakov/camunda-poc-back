@@ -1,12 +1,10 @@
 package poc.app.impl;
 
-import io.camunda.zeebe.protocol.record.Record;
-import io.camunda.zeebe.protocol.record.value.JobRecordValue;
-import io.camunda.zeebe.protocol.record.value.ProcessInstanceCreationRecordValue;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import poc.domain.Process;
-import poc.domain.UserTask;
+import poc.domain.BpmnProcess;
+import poc.domain.BpmnUserTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,19 +15,17 @@ import java.util.Map;
  * todo Document type TaskList
  */
 @Component
+@Getter
 @Slf4j
 public class TaskList {
 
-    private static final String VAR_PROCESS_EXTERNAL_ID = "processExternalId";
-    private static final String HEADER_ASSIGNEE = "io.camunda.zeebe:assignee";
-
     // ключ - ключ процесса (value.processInstanceKey)
-    private final Map<Long, Process> activeProcesses = new HashMap<>();
+    private final Map<Long, BpmnProcess> activeProcesses = new HashMap<>();
 
-
-    synchronized public void registerProcessStart(long processInstanceKey, ProcessInstanceCreationRecordValue value) {
+    synchronized public void registerProcessStart(BpmnProcess process) {
+        long processInstanceKey = process.getProcessInstanceKey();
         log.info("registerProcessStart(): processInstanceKey = {}", processInstanceKey);
-        activeProcesses.put(processInstanceKey, new Process(processInstanceKey, (String)value.getVariables().get(VAR_PROCESS_EXTERNAL_ID)));
+        activeProcesses.put(processInstanceKey, process);
     }
 
     synchronized public void registerProcessEnd(long processInstanceKey) {
@@ -37,19 +33,15 @@ public class TaskList {
         activeProcesses.remove(processInstanceKey);
     }
 
-    synchronized public void registerUserTaskStart(long processInstanceKey, long key, Record<JobRecordValue> record) {
-        log.info("registerUserTaskStart(): processInstanceKey = {}, key = {}", processInstanceKey, key);
-        Process process = activeProcesses.get(processInstanceKey);
-        UserTask userTask = new UserTask(key,
-            record.getValue().getElementId(),
-            record.getValue().getCustomHeaders().get(HEADER_ASSIGNEE),
-            process);
-        process.getUserTasks().put(key, userTask);
+    synchronized public void registerUserTaskStart(long processInstanceKey, BpmnUserTask userTask) {
+        log.info("registerUserTaskStart(): processInstanceKey = {}, key = {}", processInstanceKey, userTask.getKey());
+        BpmnProcess process = activeProcesses.get(processInstanceKey);
+        process.getUserTasks().put(userTask.getKey(), userTask);
     }
 
     synchronized public void registerUserTaskEnd(long processInstanceKey, long key) {
         log.info("registerUserTaskEnd(): processInstanceKey = {}, key = {}", processInstanceKey, key);
-        Process process = activeProcesses.get(processInstanceKey);
+        BpmnProcess process = activeProcesses.get(processInstanceKey);
         if (process != null) {
             process.getUserTasks().remove(key);
         } else {
@@ -57,8 +49,8 @@ public class TaskList {
         }
     }
 
-    public List<UserTask> getAllActiveUserTasks() {
-        List<UserTask> result = new ArrayList<>();
+    public List<BpmnUserTask> getAllActiveUserTasks() {
+        List<BpmnUserTask> result = new ArrayList<>();
 
         activeProcesses.values().forEach(
             process -> {
@@ -72,8 +64,8 @@ public class TaskList {
         return result;
     }
 
-    public List<UserTask> getActiveUserTasks(String assignee) {
-        List<UserTask> result = new ArrayList<>();
+    public List<BpmnUserTask> getActiveUserTasks(String assignee) {
+        List<BpmnUserTask> result = new ArrayList<>();
 
         activeProcesses.values().forEach(
             process -> {
