@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class InputDataDto {
-    private String processId;
+    private long taskKey;
     private String inputData;
 }

@@ -7,7 +7,6 @@ import io.camunda.zeebe.spring.client.lifecycle.ZeebeClientLifecycle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import poc.adapter.zeebe.state.UserTaskInfoHolder;
 import poc.app.api.BpmnEngine;
 import poc.app.api.ProcessDataInbound;
 import poc.app.impl.TaskList;
@@ -27,8 +26,6 @@ public class ZeebeAdapter implements BpmnEngine {
     private final ZeebeClientLifecycle client;
 
     private final ProcessDataInbound processDataInbound;
-
-    private final UserTaskInfoHolder userTaskInfoHolder;
 
     private final String PROCESS_DEFINITION_ID = "poc-process";
 
@@ -52,11 +49,11 @@ public class ZeebeAdapter implements BpmnEngine {
     }
 
     @Override
-    public void inputData(String processExternalId, String inputData) {
+    public void inputData(long taskKey, String inputData) {
 
-        log.info("inputData(): processExternalId = {}, inputData = {}", processExternalId, inputData);
+        log.info("inputData(): taskKey = {}, inputData = {}", taskKey, inputData);
 
-        long taskKey = userTaskInfoHolder.getUserTaskKey(processExternalId, "input-data");
+        //long taskKey = userTaskInfoHolder.getUserTaskKey(processExternalId, "input-data");
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("inputData", inputData);
@@ -66,8 +63,6 @@ public class ZeebeAdapter implements BpmnEngine {
             .variables(variables)
             .send()
             .join();
-
-        userTaskInfoHolder.unregisterUserTask(processExternalId, taskKey);
     }
 
     @Override
@@ -86,6 +81,8 @@ public class ZeebeAdapter implements BpmnEngine {
             .send()
             .join();
     }
+/*
+    Пример worker'а для UserTask'ов
 
     // autoComplete = false чтобы user task'а не завершалась и висела в task list'е
     // до выполнения inputData() через rest
@@ -100,7 +97,7 @@ public class ZeebeAdapter implements BpmnEngine {
 
         userTaskInfoHolder.registerUserTask(processExternalId, elementId, key);
     }
-
+*/
     // autoComplete = false чтобы можно было обновить переменные в процессе, см. в коде
     @JobWorker(type = "process-data", autoComplete = false)
     public void processData(final ActivatedJob job) {

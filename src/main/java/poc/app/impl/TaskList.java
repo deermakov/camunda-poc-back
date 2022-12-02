@@ -62,9 +62,12 @@ public class TaskList {
 
         activeProcesses.values().forEach(
             process -> {
+                log.info("getAllActiveUserTasks(): process = {}, tasks = {}", process.getProcessInstanceKey(), process.getUserTasks().size());
                 result.addAll(process.getUserTasks().values());
             }
         );
+
+        log.info("getAllActiveUserTasks(): result = {}", result.size());
 
         return result;
     }
@@ -73,11 +76,17 @@ public class TaskList {
         List<UserTask> result = new ArrayList<>();
 
         activeProcesses.values().forEach(
-            process -> process.getUserTasks().values()
-                .stream()
-                .filter(userTask -> assignee.equals(userTask.getAssignee()))
-                .forEach(result::add)
+            process -> {
+                log.info("getActiveUserTasks(): process = {}, tasks = {}", process.getProcessInstanceKey(), process.getUserTasks().size());
+
+                process.getUserTasks().values()
+                    .stream()
+                    .filter(userTask -> assignee.equals(userTask.getAssignee()))
+                    .forEach(result::add);
+            }
         );
+
+        log.info("getActiveUserTasks(): result = {}", result.size());
 
         return result;
     }

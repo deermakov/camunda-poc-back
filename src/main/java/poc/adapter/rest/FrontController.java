@@ -37,7 +37,7 @@ public class FrontController {
     @PostMapping("/input-data")
     public void inputData(@RequestBody InputDataDto request) {
         log.info("inputData(): {}", request);
-        inputDataInbound.execute(request.getProcessId(), request.getInputData());
+        inputDataInbound.execute(request.getTaskKey(), request.getInputData());
     }
 
     @PostMapping("/terminate")
