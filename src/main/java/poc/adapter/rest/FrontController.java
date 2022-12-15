@@ -2,11 +2,13 @@ package poc.adapter.rest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import poc.app.api.GetTaskListInbound;
-import poc.app.api.InputDataInbound;
-import poc.app.api.StartProcessInbound;
-import poc.app.api.TerminateInbound;
+import poc.app.api.*;
 import poc.domain.BpmnUserTask;
 
 import java.util.List;
@@ -24,6 +26,8 @@ public class FrontController {
     private final InputDataInbound inputDataInbound;
     private final TerminateInbound terminateInbound;
     private final GetTaskListInbound getTaskListInbound;
+
+    private final GetBpmnFileInbound getBpmnFileInbound;
 
     @PostMapping("/start")
     public StartProcessResponseDto startProcess(@RequestBody StartProcessRequestDto request) {
@@ -48,5 +52,26 @@ public class FrontController {
     public List<BpmnUserTask> getTaskList(@PathVariable(required = false) String assignee) {
         log.info("getTaskList(): {}", assignee);
         return getTaskListInbound.execute(assignee);
+    }
+
+    @GetMapping("/bpmn-file")
+    public ResponseEntity<Resource> getBpmnFile() {
+        log.info("getBpmnFile()");
+
+        Resource bpmnFile = getBpmnFileInbound.execute();
+        try {
+            return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .contentLength(bpmnFile.contentLength())
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                    ContentDisposition.attachment()
+                        .filename(bpmnFile.getFilename())
+                        .build().toString())
+                .body(bpmnFile);
+        } catch (Exception e) {
+            log.error("", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
