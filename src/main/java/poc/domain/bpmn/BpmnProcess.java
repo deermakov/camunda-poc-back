@@ -1,4 +1,4 @@
-package poc.domain;
+package poc.domain.bpmn;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;

@@ -21,8 +21,8 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import poc.app.impl.TaskList;
-import poc.domain.BpmnProcess;
-import poc.domain.BpmnUserTask;
+import poc.domain.bpmn.BpmnProcess;
+import poc.domain.bpmn.BpmnUserTask;
 
 import java.util.Date;
 import java.util.List;

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import poc.app.api.GetTaskListInbound;
-import poc.domain.BpmnUserTask;
+import poc.domain.bpmn.BpmnUserTask;
 
 import java.util.List;
 

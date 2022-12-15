@@ -1,4 +1,4 @@
-package poc.domain;
+package poc.domain.bpmn;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

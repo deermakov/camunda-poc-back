@@ -1,6 +1,6 @@
 package poc.app.api;
 
-import poc.domain.BpmnUserTask;
+import poc.domain.bpmn.BpmnUserTask;
 
 import java.util.List;
 

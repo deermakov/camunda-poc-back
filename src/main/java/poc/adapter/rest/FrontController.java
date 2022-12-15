@@ -9,7 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import poc.app.api.*;
-import poc.domain.BpmnUserTask;
+import poc.domain.bpmn.BpmnUserTask;
+import poc.domain.heatmap.Heatmap;
 
 import java.util.List;
 
@@ -26,6 +27,8 @@ public class FrontController {
     private final InputDataInbound inputDataInbound;
     private final TerminateInbound terminateInbound;
     private final GetTaskListInbound getTaskListInbound;
+
+    private final GetHeatmapInbound getHeatmapInbound;
 
     private final GetBpmnFileInbound getBpmnFileInbound;
 
@@ -73,5 +76,11 @@ public class FrontController {
             log.error("", e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping("/heatmap")
+    public Heatmap getHeatmap() {
+        log.info("getHeatmap()");
+        return getHeatmapInbound.execute();
     }
 }

@@ -3,8 +3,8 @@ package poc.app.impl;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import poc.domain.BpmnProcess;
-import poc.domain.BpmnUserTask;
+import poc.domain.bpmn.BpmnProcess;
+import poc.domain.bpmn.BpmnUserTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
