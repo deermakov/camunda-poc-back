@@ -11,5 +11,5 @@ import lombok.Data;
 public class DataPoint {
     private int x;
     private int y;
-    private int value;
+    private float value;
 }

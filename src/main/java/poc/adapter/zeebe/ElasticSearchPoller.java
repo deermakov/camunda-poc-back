@@ -44,7 +44,8 @@ public class ElasticSearchPoller {
     private static final String VAR_PROCESS_EXTERNAL_ID = "processExternalId";
     private static final String HEADER_ASSIGNEE = "io.camunda.zeebe:assignee";
 
-    final ObjectMapper mapper = new ObjectMapper().registerModule(new ZeebeProtocolModule());
+    // mapper для десериализации объектов протокола Zeebe (в т.ч. объектов RecordValue)
+    final ObjectMapper zeebeMapper = new ObjectMapper().registerModule(new ZeebeProtocolModule());
 
     final ObjectMapper rawMapper = new ObjectMapper();
 
@@ -98,7 +99,7 @@ public class ElasticSearchPoller {
                 try {
                     String json = rawMapper.writeValueAsString(obj);
                     log.info("poll(): {}", json);
-                    record = mapper.readValue(json, new TypeReference<Record<T>>() {
+                    record = zeebeMapper.readValue(json, new TypeReference<Record<T>>() {
                     });
                     //log.info("class = {}", record.getValue().getClass());
                     return record;

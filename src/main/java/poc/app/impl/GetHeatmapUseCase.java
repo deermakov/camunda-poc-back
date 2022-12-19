@@ -7,6 +7,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import poc.app.api.ClasspathResource;
+import poc.app.api.ElasticSearch;
 import poc.app.api.GetHeatmapInbound;
 import poc.domain.heatmap.DataPoint;
 import poc.domain.heatmap.Heatmap;
@@ -32,6 +33,8 @@ public class GetHeatmapUseCase implements GetHeatmapInbound {
 
     private final ClasspathResource classpathResource;
 
+    private final ElasticSearch elasticSearch;
+
     String ELEMENT_XPATH_EXPRESSION = "//bpmndi:BPMNShape[@bpmnElement='%s']/dc:Bounds";
 
     @Override
@@ -45,15 +48,28 @@ public class GetHeatmapUseCase implements GetHeatmapInbound {
             XPathExpression processDataNodeXPathExpression = getXPathExpression("process-data-element");
             DataPoint processDataElementDataPoint = getBpmnElementCenterCoords(xmlDocument, processDataNodeXPathExpression);
 
+            int inputDataActivationsCount = elasticSearch.getInputDataActivationsCount();
+            int processDataActivationsCount = elasticSearch.getProcessDataActivationsCount();
+            int startActivationsCount = elasticSearch.getStartActivationsCount();
+            log.info("starts = {}, inputData activations = {}, processData activations = {}", startActivationsCount, inputDataActivationsCount,
+                processDataActivationsCount);
+
+            float denominator = startActivationsCount > 0 ? startActivationsCount + 0f : 1f;
+            float inputDataActivationsFreq = inputDataActivationsCount / denominator;
+            float processDataActivationsFreq = processDataActivationsCount / denominator;
+            log.info("inputData activations freq = {}, processData activations freq = {}", inputDataActivationsFreq, processDataActivationsFreq);
+
+            inputDataElementDataPoint.setValue(inputDataActivationsFreq);
+            processDataElementDataPoint.setValue(processDataActivationsFreq);
+
             return Heatmap.builder()
                 .min(0)
-                .max(100)
+                .max(1)
                 .data(List.of(
                     inputDataElementDataPoint,
                     processDataElementDataPoint
                 ))
                 .build();
-
         } catch (Exception e) {
             log.error("", e);
             throw new RuntimeException(e);
