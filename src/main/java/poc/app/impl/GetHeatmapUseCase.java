@@ -20,6 +20,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -44,12 +45,12 @@ public class GetHeatmapUseCase implements GetHeatmapInbound {
             Document xmlDocument = getXmlDocument();
 
             XPathExpression inputDataNodeXPathExpression = getXPathExpression("input-data");
-            DataPoint inputDataElementDataPoint = getBpmnElementCenterCoords(xmlDocument, inputDataNodeXPathExpression);
-            XPathExpression processDataNodeXPathExpression = getXPathExpression("process-data-element");
-            DataPoint processDataElementDataPoint = getBpmnElementCenterCoords(xmlDocument, processDataNodeXPathExpression);
+            XPathExpression processDataNodeXPathExpression = getXPathExpression("process-data");
+            XPathExpression terminateMessageNodeXPathExpression = getXPathExpression("terminate");
 
             int inputDataActivationsCount = elasticSearch.getInputDataActivationsCount();
             int processDataActivationsCount = elasticSearch.getProcessDataActivationsCount();
+            int terminateActivationsCount = elasticSearch.getTerminateActivationsCount();
             int startActivationsCount = elasticSearch.getStartActivationsCount();
             log.info("starts = {}, inputData activations = {}, processData activations = {}", startActivationsCount, inputDataActivationsCount,
                 processDataActivationsCount);
@@ -57,18 +58,18 @@ public class GetHeatmapUseCase implements GetHeatmapInbound {
             float denominator = startActivationsCount > 0 ? startActivationsCount + 0f : 1f;
             float inputDataActivationsFreq = inputDataActivationsCount / denominator;
             float processDataActivationsFreq = processDataActivationsCount / denominator;
+            float terminateActivationsFreq = terminateActivationsCount / denominator;
             log.info("inputData activations freq = {}, processData activations freq = {}", inputDataActivationsFreq, processDataActivationsFreq);
 
-            inputDataElementDataPoint.setValue(inputDataActivationsFreq);
-            processDataElementDataPoint.setValue(processDataActivationsFreq);
+            List<DataPoint> dataPoints = new ArrayList<>();
+            dataPoints.addAll(getHeatmapForElement(xmlDocument, inputDataNodeXPathExpression, inputDataActivationsFreq));
+            dataPoints.addAll(getHeatmapForElement(xmlDocument, processDataNodeXPathExpression, processDataActivationsFreq));
+            dataPoints.addAll(getHeatmapForElement(xmlDocument, terminateMessageNodeXPathExpression, terminateActivationsFreq));
 
             return Heatmap.builder()
                 .min(0)
                 .max(1)
-                .data(List.of(
-                    inputDataElementDataPoint,
-                    processDataElementDataPoint
-                ))
+                .data(dataPoints)
                 .build();
         } catch (Exception e) {
             log.error("", e);
@@ -113,7 +114,12 @@ public class GetHeatmapUseCase implements GetHeatmapInbound {
         return xPath.compile(xPathExpression);
     }
 
-    private DataPoint getBpmnElementCenterCoords(Document xmlDocument, XPathExpression xPathExpression) throws Exception {
+    private List<DataPoint> getHeatmapForElement(Document xmlDocument, XPathExpression xPathExpression, float value) throws Exception{
+
+        if (value == 0){
+            return new ArrayList<>();
+        }
+
         Node elementNode = (Node) xPathExpression.evaluate(xmlDocument, XPathConstants.NODE);
         NamedNodeMap attrs = elementNode.getAttributes();
         String xStr = attrs.getNamedItem("x").getNodeValue();
@@ -123,11 +129,18 @@ public class GetHeatmapUseCase implements GetHeatmapInbound {
 
         int x = Integer.parseInt(xStr);
         int y = Integer.parseInt(yStr);
-        int heigth = Integer.parseInt(heightStr);
+        int height = Integer.parseInt(heightStr);
         int width = Integer.parseInt(widthStr);
-        int centerX = x + width / 2;
-        int centerY = y + heigth / 2;
 
-        return new DataPoint(centerX, centerY, 90);
+        int radius = height / 2;
+        DataPoint centerDataPoint = new DataPoint(x + width / 2, y + height / 2, value, radius * 1.5f);
+        DataPoint lowerLeftDataPoint = new DataPoint(x + radius / 2, y + height - radius / 2, value, radius);
+        DataPoint lowerMiddleDataPoint = new DataPoint(x + width / 2, y + height - radius / 2, value, radius);
+        DataPoint lowerRightDataPoint = new DataPoint(x + width - radius / 2, y + height - radius / 2, value, radius);
+        DataPoint upperLeftDataPoint = new DataPoint(x + radius / 2, y + radius / 2, value, radius);
+        DataPoint upperMiddleDataPoint = new DataPoint(x + width / 2, y + radius / 2, value, radius);
+        DataPoint upperRightDataPoint = new DataPoint(x + width - radius / 2, y + radius / 2, value, radius);
+
+        return List.of(centerDataPoint, upperLeftDataPoint, upperMiddleDataPoint, upperRightDataPoint, lowerLeftDataPoint, lowerMiddleDataPoint, lowerRightDataPoint);
     }
 }

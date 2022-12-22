@@ -8,5 +8,7 @@ public interface ElasticSearch {
 
     int getProcessDataActivationsCount();
 
+    int getTerminateActivationsCount();
+
     int getStartActivationsCount();
 }

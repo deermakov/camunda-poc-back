@@ -30,7 +30,9 @@ import java.util.List;
 public class ElasticSearchAdapter implements ElasticSearch {
 
     private static final String ELEMENT_ID_INPUT_DATA = "input-data";
-    private static final String ELEMENT_ID_PROCESS_DATA = "process-data-element";
+    private static final String ELEMENT_ID_PROCESS_DATA = "process-data";
+
+    private static final String ELEMENT_ID_TERMINATE_MESSAGE = "terminate";
 
     private static final String ELEMENT_ID_START = "StartEvent_1";
 
@@ -122,4 +124,8 @@ public class ElasticSearchAdapter implements ElasticSearch {
     public int getStartActivationsCount() {
         return getActivationsCount(ELEMENT_ID_START);
     }
-}
+
+    @Override
+    public int getTerminateActivationsCount() {
+        return getActivationsCount(ELEMENT_ID_TERMINATE_MESSAGE);
+    }}

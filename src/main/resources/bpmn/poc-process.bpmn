@@ -9,7 +9,7 @@
       <bpmn:incoming>Flow_0sgcbep</bpmn:incoming>
       <bpmn:incoming>Flow_1oukq73</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1oukq73" sourceRef="ewfbwefbwbef" targetRef="Event_1vt9vp4" />
+    <bpmn:sequenceFlow id="Flow_1oukq73" sourceRef="terminate" targetRef="Event_1vt9vp4" />
     <bpmn:userTask id="input-data" name="Input data">
       <bpmn:extensionElements>
         <zeebe:assignmentDefinition assignee="demo" />
@@ -17,16 +17,16 @@
       <bpmn:incoming>Flow_0k42gxd</bpmn:incoming>
       <bpmn:outgoing>Flow_1p9m9ep</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:serviceTask id="process-data-element" name="Process data">
+    <bpmn:serviceTask id="process-data" name="Process data">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="process-data" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1p9m9ep</bpmn:incoming>
       <bpmn:outgoing>Flow_0sgcbep</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:sequenceFlow id="Flow_0sgcbep" sourceRef="process-data-element" targetRef="Event_1vt9vp4" />
-    <bpmn:sequenceFlow id="Flow_1p9m9ep" sourceRef="input-data" targetRef="process-data-element" />
-    <bpmn:boundaryEvent id="ewfbwefbwbef" name="terminate" attachedToRef="input-data">
+    <bpmn:sequenceFlow id="Flow_0sgcbep" sourceRef="process-data" targetRef="Event_1vt9vp4" />
+    <bpmn:sequenceFlow id="Flow_1p9m9ep" sourceRef="input-data" targetRef="process-data" />
+    <bpmn:boundaryEvent id="terminate" name="terminate" attachedToRef="input-data">
       <bpmn:outgoing>Flow_1oukq73</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1yz63o3" messageRef="Message_26sqk3s" />
     </bpmn:boundaryEvent>
@@ -48,11 +48,11 @@
         <dc:Bounds x="280" y="77" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_15ibxt3_di" bpmnElement="process-data-element">
+      <bpmndi:BPMNShape id="Activity_15ibxt3_di" bpmnElement="process-data">
         <dc:Bounds x="700" y="77" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1fbo3aq_di" bpmnElement="ewfbwefbwbef">
+      <bpmndi:BPMNShape id="Event_1fbo3aq_di" bpmnElement="terminate">
         <dc:Bounds x="362" y="139" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="360" y="182" width="46" height="14" />

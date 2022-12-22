@@ -12,4 +12,5 @@ public class DataPoint {
     private int x;
     private int y;
     private float value;
+    private float radius;
 }
